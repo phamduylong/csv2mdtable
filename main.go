@@ -11,7 +11,6 @@ func main() {
 		`First name,Last name,Email,Phone
 Jane,Smith,jane.smith@email.com,555-555-1212
 John,Doe,john.doe@email.com,555-555-3434
-
 Alice,Wonder,alice@wonderland.com,555-555-5656
 Aaron, Potter`)
 	if err != nil {
@@ -38,11 +37,7 @@ func convert(csv string) (string, error) {
 		colVals := strings.Split(originalLine, ",")
 		newLine := ""
 
-		if originalLine == "" {
-			newLine = ""
-		}
-
-		for i := 0; i < colCount; i++ {
+		for i := range colCount {
 			if i < len(colVals) {
 				newLine += fmt.Sprintf("| %s ", colVals[i])
 			} else {
