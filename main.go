@@ -19,7 +19,8 @@ Aaron, Potter`)
 	} else {
 		fmt.Printf("Converted successfully ✅ Result:\n%s", res)
 	}
-
+	fmt.Printf("Press Enter to continue...")
+	fmt.Scanln()
 }
 
 // convert csv string into a markdown table
@@ -28,20 +29,9 @@ func convert(csv string) (string, error) {
 		return "", errors.New("empty CSV input")
 	}
 	result := ""
-	maxCol := 0
-	nrOfCols := 0
 	const emptyCol = "| "
-	for line := range strings.Lines(csv) {
-		if line == "" {
-			continue
-		}
-		nrOfCols = strings.Count(line, ",") + 1
-		if nrOfCols > maxCol {
-			maxCol = nrOfCols
-		}
-	}
-
 	lines := strings.Split(csv, "\n")
+	colCount := getColumnCount(lines)
 
 	for idx := range len(lines) {
 		originalLine := strings.ReplaceAll(lines[idx], "\n", "")
@@ -52,7 +42,7 @@ func convert(csv string) (string, error) {
 			newLine = ""
 		}
 
-		for i := 0; i < maxCol; i++ {
+		for i := 0; i < colCount; i++ {
 			if i < len(colVals) {
 				newLine += fmt.Sprintf("| %s ", colVals[i])
 			} else {
@@ -68,7 +58,7 @@ func convert(csv string) (string, error) {
 		result += newLine
 
 		if idx == 0 {
-			separatorLine := constructSeparatorLine(maxCol)
+			separatorLine := constructSeparatorLine(colCount)
 			result += separatorLine
 		}
 	}
@@ -84,4 +74,21 @@ func constructSeparatorLine(colsCount int) string {
 	}
 	separatorLine += "\n"
 	return separatorLine
+}
+
+// Get the amount of columns in the csv file
+func getColumnCount(lines []string) int {
+	maxCol := 0
+	nrOfCols := 0
+	for _, line := range lines {
+		if line == "" {
+			continue
+		}
+		nrOfCols = strings.Count(line, ",") + 1
+		if nrOfCols > maxCol {
+			maxCol = nrOfCols
+		}
+	}
+
+	return maxCol
 }
