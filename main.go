@@ -28,34 +28,38 @@ func convert(csv string) (string, error) {
 		return "", errors.New("empty CSV input")
 	}
 	result := ""
-	const emptyCol = "| "
 	lines := strings.Split(csv, "\n")
 	colCount := getColumnCount(lines)
 
 	// max length of each column so we can beautify the table
 	maxLenOfCol := getMaxColumnLengths(lines, colCount)
+
+	// constructing each data line
 	for idx := range len(lines) {
 		originalLine := strings.ReplaceAll(lines[idx], "\n", "")
+		// array containing field values in the current line
 		colVals := strings.Split(originalLine, ",")
-		newLine := ""
+		// fill empty column values with empty strings
+		for range colCount - len(colVals) {
+			colVals = append(colVals, "")
+		}
+		convertedLine := ""
 
 		for i := range colCount {
-			if i < len(colVals) {
-				newLine += fmt.Sprintf("| %s ", colVals[i])
-			} else {
-				newLine += emptyCol
+			paddedString, err := padCenter(colVals[i], maxLenOfCol[i], ' ')
+			if err != nil {
+				return "", errors.New("something happened when padding value " + colVals[i] + " row: " + fmt.Sprint(idx) + " col: " + fmt.Sprint(i) + ". Error message: " + err.Error())
 			}
+			convertedLine += "| " + paddedString + " "
 		}
 
 		// add final column closer and new line
-		newLine += "|\n"
-		// replace awkward double spaces
-		newLine = strings.ReplaceAll(newLine, "  ", " ")
+		convertedLine += "|\n"
 		// append to result string
-		result += newLine
+		result += convertedLine
 
 		if idx == 0 {
-			separatorLine := constructSeparatorLine(colCount)
+			separatorLine := constructSeparatorLine(colCount, maxLenOfCol)
 			result += separatorLine
 		}
 	}
