@@ -32,6 +32,8 @@ func convert(csv string) (string, error) {
 	lines := strings.Split(csv, "\n")
 	colCount := getColumnCount(lines)
 
+	// max length of each column so we can beautify the table
+	maxLenOfCol := getMaxColumnLengths(lines, colCount)
 	for idx := range len(lines) {
 		originalLine := strings.ReplaceAll(lines[idx], "\n", "")
 		colVals := strings.Split(originalLine, ",")
@@ -86,4 +88,19 @@ func getColumnCount(lines []string) int {
 	}
 
 	return maxCol
+}
+
+// Get max length of each columns
+func getMaxColumnLengths(lines []string, colCount int) []int {
+	maxLens := make([]int, colCount)
+	for _, line := range lines {
+		colVals := strings.Split(line, ",")
+		for colIdx, colVal := range colVals {
+			if len(colVal) > maxLens[colIdx] {
+				maxLens[colIdx] = len(colVal)
+			}
+		}
+	}
+
+	return maxLens
 }
