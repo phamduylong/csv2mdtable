@@ -3,27 +3,65 @@ package main
 import (
 	"errors"
 	"fmt"
+	"log"
 	"strings"
+
+	"golang.design/x/clipboard"
 )
 
+const padLengthErrorString = "the length of the original string already exceeded desired length"
+
 func main() {
-	res, err := convert(
-		`UID,First name,Last name,Email,Phone
-0,Jane,Smith,jane.smith@email.com,555-555-1212
-1,John,Doe,john.doe@email.com,555-555-3434
-2,Alice,Wonder,alice@wonderland.com,555-555-5656
-3,Aaron,Potter`)
-	if err != nil {
-		fmt.Printf("An error occurred 🙄: %s", err.Error())
-	} else {
-		fmt.Printf("Converted successfully ✅ Result:\n%s", res)
+
+	csvString := ""
+	var err error = nil
+	cfg, cfgErr := parseConfig()
+
+	if cfgErr != nil {
+		log.Fatalf("Configuration error: %s", cfgErr.Error())
 	}
+
+	// if http:
+	if cfg.URL != "" {
+		if cfg.VerboseLogging {
+			log.Println("Reading CSV from URL: " + cfg.URL)
+		}
+		csvString, err = getCSVStringFromUrl(cfg.URL)
+	}
+
+	// if csv from file:
+	if cfg.FilePath != "" {
+		if cfg.VerboseLogging {
+			log.Println("Reading from file path: " + cfg.FilePath)
+		}
+		csvString, err = getCSVStringFromPath(cfg.FilePath)
+	}
+
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	res, err := convert(csvString, cfg)
+
+	if err != nil {
+		fmt.Printf("An error occurred 🙄: %s\n", err.Error())
+	}
+
+	if cfg.AutoCopy {
+		clipboardInitErr := clipboard.Init()
+		if clipboardInitErr != nil {
+			log.Fatalln("failed to initiate clipboard")
+		}
+		clipboard.Write(clipboard.FmtText, []byte(res))
+		log.Println("Copied to clipboard 📋")
+	}
+
 	fmt.Printf("Press Enter to continue...")
 	fmt.Scanln()
 }
 
 // convert csv string into a markdown table
-func convert(csv string) (string, error) {
+func convert(csv string, cfg Config) (string, error) {
 	if csv == "" {
 		return "", errors.New("empty CSV input")
 	}
@@ -46,7 +84,18 @@ func convert(csv string) (string, error) {
 		convertedLine := ""
 
 		for i := range colCount {
-			paddedString, err := padCenter(colVals[i], maxLenOfCol[i], ' ')
+			paddedString := ""
+			var err error = nil
+
+			switch cfg.Align {
+			case Left:
+				paddedString, err = padEnd(colVals[i], maxLenOfCol[i], ' ')
+			case Right:
+				paddedString, err = padStart(colVals[i], maxLenOfCol[i], ' ')
+			case Center:
+				paddedString, err = padCenter(colVals[i], maxLenOfCol[i], ' ')
+			}
+
 			if err != nil {
 				return "", errors.New("something happened when padding value " + colVals[i] + " row: " + fmt.Sprint(idx) + " col: " + fmt.Sprint(i) + ". Error message: " + err.Error())
 			}
@@ -112,72 +161,4 @@ func getMaxColumnLengths(lines []string, colCount int) []int {
 	}
 
 	return maxLens
-}
-
-// pad characters to start of a string
-func padStart(originalString string, desiredLen int, paddingChar rune) (string, error) {
-	if len(originalString) > desiredLen {
-		return "", errors.New("the length of the original string already exceeded desired length")
-	}
-
-	lenDiff := desiredLen - len(originalString)
-
-	if lenDiff == 0 {
-		return originalString, nil
-	}
-
-	preFix := ""
-
-	for range lenDiff {
-		preFix += string(paddingChar)
-	}
-
-	return preFix + originalString, nil
-}
-
-// pad characters to the end of a string
-func padEnd(originalString string, desiredLen int, paddingChar rune) (string, error) {
-	if len(originalString) > desiredLen {
-		return "", errors.New("the length of the original string already exceeded desired length")
-	}
-
-	lenDiff := desiredLen - len(originalString)
-
-	if lenDiff == 0 {
-		return originalString, nil
-	}
-
-	postFix := ""
-
-	for range lenDiff {
-		postFix += string(paddingChar)
-	}
-
-	return originalString + postFix, nil
-}
-
-// Pad both sides. If odd characters are to be padded, the longer string is padded to the start of the string.
-// Usually the longer string is actually padded to the end, but this serves the purpose of this utility class
-func padCenter(originalString string, desiredLen int, paddingChar rune) (string, error) {
-	if len(originalString) > desiredLen {
-		return "", errors.New("the length of the original string already exceeded desired length")
-	}
-
-	lenDiff := desiredLen - len(originalString)
-
-	toPadEnd := lenDiff / 2
-	toPadStart := lenDiff - toPadEnd
-
-	resStr := originalString
-	resStr, err := padEnd(originalString, len(resStr)+toPadEnd, paddingChar)
-	if err != nil {
-		return "", err
-	}
-
-	resStr, err = padStart(resStr, len(resStr)+toPadStart, paddingChar)
-	if err != nil {
-		return "", err
-	}
-
-	return resStr, nil
 }
