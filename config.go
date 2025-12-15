@@ -21,6 +21,7 @@ type Config struct {
 	FilePath       string
 	AutoCopy       bool
 	VerboseLogging bool
+	OutputToWindow bool
 }
 
 func parseConfig() (Config, error) {
@@ -29,6 +30,7 @@ func parseConfig() (Config, error) {
 	alignPtr := flag.Int("align", int(Center), "How should text be aligned in the table?\n0. Center\n1. Left\n2. Right")
 	autoCopyPtr := flag.Bool("autoCopy", false, "Should the converted markdown table be copied to clipboard automatically?")
 	verboseLoggingPtr := flag.Bool("verboseLogging", false, "Should detailed diagnostic messages be logged?")
+	outputToWindowPtr := flag.Bool("outputToWindow", false, "Whether the converted table should be rendered in this window?")
 	flag.Parse()
 
 	var cfg Config
@@ -38,6 +40,7 @@ func parseConfig() (Config, error) {
 	cfg.URL = *urlPtr
 	cfg.AutoCopy = *autoCopyPtr
 	cfg.VerboseLogging = *verboseLoggingPtr
+	cfg.OutputToWindow = *outputToWindowPtr
 
 	cfgErr := validateConfig(cfg)
 
