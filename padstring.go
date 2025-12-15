@@ -2,6 +2,8 @@ package main
 
 import "errors"
 
+const padLengthErrorString = "the length of the original string already exceeded desired length"
+
 // pad characters to start of a string
 func padStart(originalString string, desiredLen int, paddingChar rune) (string, error) {
 	if len(originalString) > desiredLen {
