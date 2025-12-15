@@ -4,7 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"flag"
-	"log"
+	"fmt"
+	"log/slog"
 )
 
 type Align int
@@ -49,9 +50,11 @@ func parseConfig() (Config, error) {
 	}
 
 	if cfg.VerboseLogging {
+		slog.SetLogLoggerLevel(slog.LevelDebug)
+		// beautiful json here. 4 spaces for indentation
 		jsonCfg, serializationErr := json.MarshalIndent(cfg, "", "    ")
 		if serializationErr == nil {
-			log.Printf("Config:\n%s", jsonCfg)
+			slog.Debug(fmt.Sprintf("Config:\n%s", jsonCfg))
 		}
 	}
 
@@ -59,12 +62,17 @@ func parseConfig() (Config, error) {
 }
 
 func validateConfig(cfg Config) error {
+	if cfg.VerboseLogging {
+		slog.Debug("Validating config 🤔")
+	}
 	if cfg.URL != "" && cfg.FilePath != "" {
 		return errors.New("both URL and file path are given, please provide only one of them exclusively")
 	}
 	if cfg.URL == "" && cfg.FilePath == "" {
 		return errors.New("both URL and file path are missing, please provide either one of them exclusively")
 	}
-
+	if cfg.VerboseLogging {
+		slog.Debug("Config is valid ✅")
+	}
 	return nil
 }
