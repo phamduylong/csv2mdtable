@@ -35,7 +35,7 @@ func getCSVStringFromUrl(url string) (csvString string, err error) {
 }
 
 // read csv data from file. File must have .csv extension or else an error will be returned
-func getCSVStringFromPath(path string) (csvString string, err error) {
+func getCSVStringFromFile(path string) (csvString string, err error) {
 	fileExtension := filepath.Ext(path)
 
 	if fileExtension != ".csv" {
@@ -48,5 +48,20 @@ func getCSVStringFromPath(path string) (csvString string, err error) {
 	}
 
 	return string(fileContent[:]), nil
+}
 
+// write csv data to file
+func writeMarkdownTableToFile(path string, csvString string) (err error) {
+	file, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+
+	_, err = file.WriteString(csvString)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
