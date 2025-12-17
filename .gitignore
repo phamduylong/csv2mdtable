@@ -35,4 +35,4 @@ go.work.sum
 *.csv
 
 #output directory where output files are kept
-.output
+output
