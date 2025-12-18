@@ -155,8 +155,8 @@ func getMaxColumnLengths(lines [][]string) []int {
 	maxLens := make([]int, len(lines[0]))
 	for _, fields := range lines {
 		for fieldIdx, fieldVal := range fields {
-			if len(fieldVal) > maxLens[fieldIdx] {
-				maxLens[fieldIdx] = len(fieldVal)
+			if utf8.RuneCountInString(fieldVal) > maxLens[fieldIdx] {
+				maxLens[fieldIdx] = utf8.RuneCountInString(fieldVal)
 			}
 		}
 	}
