@@ -74,6 +74,7 @@ func parseConfig() (Config, error) {
 
 func validateConfig(cfg Config) error {
 	if cfg.VerboseLogging {
+		slog.SetLogLoggerLevel(slog.LevelDebug)
 		slog.Debug("Validating config 🤔")
 	}
 	if cfg.URL != "" && cfg.InputFilePath != "" {
