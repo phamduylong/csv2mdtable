@@ -174,20 +174,14 @@ func getCSVStringFromSource(cfg Config) (csvString string, err error) {
 
 	// if csv from url
 	if cfg.URL != "" {
-		if cfg.VerboseLogging {
-			slog.Info(fmt.Sprintf("Reading CSV from URL: %s\n", cfg.URL))
-		}
 		sourceOfData = cfg.URL
-		csvString, err = getCSVStringFromUrl(cfg.URL)
+		csvString, err = getCSVStringFromUrl(cfg)
 	}
 
 	// if csv from file
 	if cfg.InputFilePath != "" {
-		if cfg.VerboseLogging {
-			slog.Debug(fmt.Sprintf("Reading CSV from file: %s\n", cfg.InputFilePath))
-		}
 		sourceOfData = cfg.InputFilePath
-		csvString, err = getCSVStringFromFile(cfg.InputFilePath)
+		csvString, err = getCSVStringFromFile(cfg)
 	}
 
 	if err != nil {
