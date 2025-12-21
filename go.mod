@@ -4,6 +4,8 @@ go 1.25.5
 
 require golang.design/x/clipboard v0.7.1 // direct
 
+require github.com/jaswdr/faker v1.19.1
+
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
