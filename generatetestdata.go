@@ -41,7 +41,7 @@ func testRun() {
 	rows := strings.Join(csvRows, "\n")
 	cfg := createGenericConfig()
 	startTime := time.Now()
-	res, _ := convert(rows, cfg)
+	res, _ := Convert(rows, cfg)
 	elapsed := durationToReadableString(time.Since(startTime))
 	fmt.Println(res)
 	fmt.Println(elapsed)

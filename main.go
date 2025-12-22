@@ -42,7 +42,7 @@ func main() {
 		return
 	}
 
-	res, err := convert(csvString, cfg)
+	res, err := Convert(csvString, cfg)
 
 	if err != nil {
 		slog.Error(fmt.Sprintf("An error occurred 🙄: %s\n", err.Error()))
@@ -78,8 +78,8 @@ func main() {
 	fmt.Scanln()
 }
 
-// convert csv string into a markdown table
-func convert(csvString string, cfg Config) (string, error) {
+// Convert csv string into a markdown table
+func Convert(csvString string, cfg Config) (string, error) {
 	if csvString == "" {
 		return "", errors.New("empty CSV input")
 	}
@@ -113,6 +113,7 @@ func convert(csvString string, cfg Config) (string, error) {
 			paddedString := ""
 			var err error = nil
 
+			// this is basically visual feedback for users, doesn't affect how the table is rendered.
 			switch cfg.Align {
 			case Left:
 				paddedString, err = padEnd(colVals[i], maxLenOfCol[i], ' ')
@@ -188,29 +189,6 @@ func getMaxColumnLengths(lines [][]string) []int {
 	}
 
 	return maxLens
-}
-
-func getCSVStringFromSource(cfg Config) (csvString string, err error) {
-	sourceOfData := ""
-
-	// if csv from url
-	if cfg.URL != "" {
-		sourceOfData = cfg.URL
-		csvString, err = getCSVStringFromUrl(cfg)
-	}
-
-	// if csv from file
-	if cfg.InputFilePath != "" {
-		sourceOfData = cfg.InputFilePath
-		csvString, err = getCSVStringFromFile(cfg)
-	}
-
-	if err != nil {
-		return "", fmt.Errorf("failed to read CSV from source.\nSource: %s\nOriginal error: %s", sourceOfData, err.Error())
-	}
-
-	return csvString, nil
-
 }
 
 func createCSVReader(cfg Config, csvString string) *csv.Reader {

@@ -10,7 +10,31 @@ import (
 	"path/filepath"
 )
 
-// get CSV data from a URL. Will make a GET request with accepted content text/csv type
+// Get CSV String from the source specified in the config object
+func getCSVStringFromSource(cfg Config) (csvString string, err error) {
+	sourceOfData := ""
+
+	// if csv from url
+	if cfg.URL != "" {
+		sourceOfData = cfg.URL
+		csvString, err = getCSVStringFromUrl(cfg)
+	}
+
+	// if csv from file
+	if cfg.InputFilePath != "" {
+		sourceOfData = cfg.InputFilePath
+		csvString, err = getCSVStringFromFile(cfg)
+	}
+
+	if err != nil {
+		return "", fmt.Errorf("failed to read CSV from source.\nSource: %s\nOriginal error: %s", sourceOfData, err.Error())
+	}
+
+	return csvString, nil
+
+}
+
+// Get CSV data from a URL. Will make a GET request with accepted content text/csv type
 func getCSVStringFromUrl(cfg Config) (csvString string, err error) {
 	req, err := http.NewRequest("GET", cfg.URL, nil)
 	if err != nil {
@@ -51,7 +75,7 @@ func getCSVStringFromUrl(cfg Config) (csvString string, err error) {
 	return csvFromUrl, nil
 }
 
-// read csv data from file. File must have .csv extension or else an error will be returned
+// Read csv data from file. File must have .csv extension or else an error will be returned
 func getCSVStringFromFile(cfg Config) (csvString string, err error) {
 	if _, err := os.Stat(cfg.InputFilePath); os.IsNotExist(err) {
 		return "", fmt.Errorf("path %s does not exist", cfg.InputFilePath)
@@ -79,13 +103,14 @@ func getCSVStringFromFile(cfg Config) (csvString string, err error) {
 	return string(fileContent[:]), nil
 }
 
-// write csv data to file
+// Write csv data to the file path specified in the config object
 func writeMarkdownTableToFile(path string, csvString string) (err error) {
 	file, err := os.Create(path)
 	if err != nil {
 		return err
 	}
 
+	defer file.Close()
 	_, err = file.WriteString(csvString)
 
 	if err != nil {
