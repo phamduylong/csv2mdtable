@@ -69,7 +69,7 @@ func main() {
 
 	// output to window set to true, dump the table out to console
 	if cfg.OutputToWindow {
-		slog.Info("Converted table:\n" + res + "\n")
+		slog.Info("Converted table:\n\n" + res + "\n\n")
 	}
 
 	slog.Info(fmt.Sprintf("Elapsed time: %s", durationToReadableString(time.Since(startTime))))
@@ -100,37 +100,17 @@ func Convert(csvString string, cfg Config) (string, error) {
 
 	// constructing each data line
 	for idx := range len(records) {
-		// array containing field values in the current line
-		colVals := records[idx]
-		// fill empty column values with empty strings
-		for range colCount - len(colVals) {
-			colVals = append(colVals, "")
+		convertedLine, err := constructDataLine(records[idx], colCount, cfg, maxLenOfCol, idx)
+
+		if err != nil {
+			return "", nil
 		}
 
-		convertedLine := ""
-
-		for i := range colCount {
-			paddedString := ""
-			var err error = nil
-
-			// this is basically visual feedback for users, doesn't affect how the table is rendered.
-			switch cfg.Align {
-			case Left:
-				paddedString, err = padEnd(colVals[i], maxLenOfCol[i], ' ')
-			case Right:
-				paddedString, err = padStart(colVals[i], maxLenOfCol[i], ' ')
-			case Center:
-				paddedString, err = padCenter(colVals[i], maxLenOfCol[i], ' ')
-			}
-
-			if err != nil {
-				return "", errors.New("something happened when padding value " + colVals[i] + " row: " + fmt.Sprint(idx) + " col: " + fmt.Sprint(i) + ". Error message: " + err.Error())
-			}
-			convertedLine += "| " + paddedString + " "
+		// only attach a new line if it's not the last line in the table
+		if idx < len(records)-1 {
+			convertedLine += "\n"
 		}
 
-		// add final column closer and new line
-		convertedLine += "|\n"
 		// append to result string
 		result += convertedLine
 
@@ -141,6 +121,41 @@ func Convert(csvString string, cfg Config) (string, error) {
 	}
 
 	return result, nil
+}
+
+func constructDataLine(colVals []string, colCount int, cfg Config, maxLenOfCol []int, currRowIdx int) (string, error) {
+	// fill empty column values with empty strings
+	for range colCount - len(colVals) {
+		colVals = append(colVals, "")
+	}
+
+	convertedLine := ""
+
+	for i := range colCount {
+		paddedString := ""
+		var err error = nil
+
+		// this is basically visual feedback for users, doesn't affect how the table is rendered.
+		switch cfg.Align {
+		case Left:
+			paddedString, err = padEnd(colVals[i], maxLenOfCol[i], ' ')
+		case Right:
+			paddedString, err = padStart(colVals[i], maxLenOfCol[i], ' ')
+		case Center:
+			paddedString, err = padCenter(colVals[i], maxLenOfCol[i], ' ')
+		}
+
+		if err != nil {
+			return "", errors.New("something happened when padding value " + colVals[i] + " row: " + fmt.Sprint(currRowIdx) +
+				" col: " + fmt.Sprint(i) + ". Error message: " + err.Error())
+		}
+		convertedLine += "| " + paddedString + " "
+	}
+
+	// add final column closer and new line
+	convertedLine += "|"
+
+	return convertedLine, nil
 }
 
 // Construct a separator line between the header line and data lines
