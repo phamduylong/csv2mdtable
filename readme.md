@@ -9,10 +9,8 @@ This is a utility tool used to convert [Comma-separated values (CSV)](https://en
   - [Usage](#usage)
   - [Configuration Options](#configuration-options)
     - [Align](#align)
-    - [Auto Copy](#auto-copy)
     - [Delimiter](#delimiter)
     - [Input File](#input-file)
-    - [Output To Window](#output-to-window)
     - [URL](#url)
     - [Verbose Logging](#verbose-logging)
   - [Performance](#performance)
@@ -23,8 +21,22 @@ The easiest and recommended way to use this tool is through the command line. Do
 
 An example command to run the tool can look like this:
 
-```console
-./csv-to-md.exe -inputFile=input.csv -outputToWindow -align=0 -autoCopy
+```go
+import (
+  "github.com/phamduylong/csv-to-md"
+  "fmt"
+  "errors"
+)
+
+func convertMyCSV() (string, error) {
+  var cfg Config
+  cfg.URL = "https://raw.githubusercontent.com/askmedia/datalogue/master/olympics/winter_olympics_medals.csv"
+  cfg.Align = Center
+  cfg.VerboseLogging = true
+  table, err := Convert(cfg)
+  
+  fmt.Println(table)
+}
 ```
 
 ## Configuration Options
@@ -40,29 +52,6 @@ This option decides should text be aligned in the table. Available choices:
 - 1 - Left
 - 2 - Right
 
-<details>
-<summary>Example</summary>
-
-```console
-./csv-to-md.exe -align=1
-```
-
-</details>
-
-### Auto Copy
-
-<sub>*(Optional)*</sub>
-
-Whether the converted table should automatically be copied into the device's clipboard.
-
-<details>
-<summary>Example</summary>
-
-```console
-./csv-to-md.exe -autoCopy
-```
-
-</details>
 
 ### Delimiter
 
@@ -70,44 +59,11 @@ Whether the converted table should automatically be copied into the device's cli
 
 Set the delimiter character for the CSV parser. If not given, the comma `,` character will be used. This can come in handy when your CSV file use different delimiters than the popular comma.
 
-<details>
-<summary>Example</summary>
-
-```console
-./csv-to-md.exe -delimiter=;
-```
-
-</details>
-
 ### Input File
 
 The path to the input CSV file to be converted. This can be either [absolute or relative path](https://en.wikipedia.org/wiki/Path_(computing)#).
 
 **NOTE**: This should be used mutual exclusively with [URL](#url) (meaning only one of them should be used at a time)
-
-<details>
-<summary>Example</summary>
-
-```console
-./csv-to-md.exe -inputFile=C:/temp/input.csv
-```
-
-</details>
-
-### Output To Window
-
-<sub>*(Optional)*</sub>
-
-Renders the converted table to the console running the program.
-
-<details>
-<summary>Example</summary>
-
-```console
-./csv-to-md.exe -outputToWindow
-```
-
-</details>
 
 ### URL
 
@@ -115,33 +71,15 @@ The URL from which the CSV data can be fetched from. For this to work, the HTTPS
 
 **NOTE**: This should be used mutual exclusively with [Input File](#input-file) (meaning only one of them should be used at a time).
 
-<details>
-<summary>Example</summary>
-
-```console
-./csv-to-md.exe -url=https://raw.githubusercontent.com/askmedia/datalogue/master/olympics/winter_olympics_medals.csv
-```
-
-</details>
-
 ### Verbose Logging
 
 <sub>*(Optional)*</sub>
 
 Should detailed diagnostic messages be logged? By default, these messages are kept out of the process to avoid polluting the program output and prevent unnecessary information from confusing users. It could be helpful to track down the problem when the program execution went wrong.
 
-<details>
-<summary>Example</summary>
-
-```console
-./csv-to-md.exe -verboseLogging
-```
-
-</details>
-
 ## Performance
 
-*I did not create a very proper setup to measure the performance. Ran it with my own PC so take it with a grain of salt. Data for these runs was generated from [Faker library](https://pkg.go.dev/github.com/jaswdr/faker), specifically their [person](https://pkg.go.dev/github.com/jaswdr/faker#Person) and [address](https://pkg.go.dev/github.com/jaswdr/faker#Address) types.*
+*I did not create a very proper setup to measure the performance. Ran it with my own PC so take it with a grain of salt.*
 
 | Rows    | Columns | Average Execution Time (5 runs) |
 | ------- | ------- | ------------------------------- |

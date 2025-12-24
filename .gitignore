@@ -32,7 +32,7 @@ go.work.sum
 .vscode
 
 # CSV files used for testing
-*.csv
+*input
 
 #output directory where output files are kept
 output

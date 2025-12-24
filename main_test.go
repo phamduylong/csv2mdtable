@@ -1,26 +1,13 @@
-package main
+package csv2md
 
 import (
-	"fmt"
-	"strings"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
-
-	"github.com/jaswdr/faker"
 )
 
 /* STRING FUNCTION */
 const STRINGS_SHOULD_BE_THE_SAME = "The two strings should be the same"
-
-func TestDurationToString(t *testing.T) {
-	d, _ := time.ParseDuration("3.0337h")
-	expected := "3 hours 2 minutes 1 second 320 ms"
-	res := durationToReadableString(d)
-
-	assert.Equal(t, expected, res, STRINGS_SHOULD_BE_THE_SAME)
-}
 
 func TestPadStart(t *testing.T) {
 	originalString := "start"
@@ -64,18 +51,16 @@ func TestPadCenterOdd(t *testing.T) {
 
 /* Conversion */
 func TestConvertGeneric(t *testing.T) {
-	testCSV := `First name,Last name,Email,Phone
-Jane,Smith,jane.smith@email.com,555-555-1212
-John,Doe,john.doe@email.com,555-555-3434
-Alice,Wonder,alice@wonderland.com,555-555-5656`
+	cfg := createGenericConfig()
+	cfg.InputFilePath = "testdata/convertgeneric.csv"
 
 	expected := `| First name | Last name |        Email         |    Phone     |
-| :--------: | :-------: | :------------------: | :----------: | 
+| :--------: | :-------: | :------------------: | :----------: |
 |    Jane    |   Smith   | jane.smith@email.com | 555-555-1212 |
 |    John    |    Doe    |  john.doe@email.com  | 555-555-3434 |
 |   Alice    |  Wonder   | alice@wonderland.com | 555-555-5656 |`
 
-	res, err := Convert(testCSV, createGenericConfig())
+	res, err := Convert(cfg)
 
 	assert.Nil(t, err, "Convert should not return a non-nil error")
 
@@ -83,41 +68,7 @@ Alice,Wonder,alice@wonderland.com,555-555-5656`
 
 }
 
-const TEN_STRING_FIELDS_FORMAT = "\"%s\"\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\""
-
-func generateCSVRows(rowCount int) []string {
-	var res []string
-	fake := faker.New()
-	newRow := ""
-	for range rowCount {
-		person := fake.Person()
-		newRow = personObjectToCSVRow(person)
-		res = append(res, newRow)
-	}
-
-	return res
-}
-
-func personObjectToCSVRow(person faker.Person) string {
-	fake := faker.New()
-	addr := fake.Address()
-	return fmt.Sprintf(TEN_STRING_FIELDS_FORMAT,
-		person.FirstName(), person.LastName(), person.Gender(), person.SSN(), person.Title(), person.Contact().Email, person.Contact().Phone, addr.Address(), addr.PostCode(), addr.City())
-}
-
 func createGenericConfig() Config {
 	var cfg Config
 	return cfg
-}
-
-// call this function to do a test run and measure performance
-func testRun() {
-	csvRows := generateCSVRows(100000)
-	rows := strings.Join(csvRows, "\n")
-	cfg := createGenericConfig()
-	startTime := time.Now()
-	res, _ := Convert(rows, cfg)
-	elapsed := durationToReadableString(time.Since(startTime))
-	fmt.Println(res)
-	fmt.Println(elapsed)
 }

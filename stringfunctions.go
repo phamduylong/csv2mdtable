@@ -1,9 +1,7 @@
-package main
+package csv2md
 
 import (
 	"errors"
-	"strconv"
-	"time"
 	"unicode/utf8"
 )
 
@@ -74,52 +72,4 @@ func padCenter(originalString string, desiredLen int, paddingChar rune) (string,
 	}
 
 	return resStr, nil
-}
-
-func durationToReadableString(d time.Duration) string {
-	if d.Nanoseconds() == 0 {
-		return ""
-	}
-
-	res := ""
-
-	times := []int64{0, 0, 0, 0}
-	symbolsPlural := []string{"hours ", "minutes ", "seconds ", "ms"}
-	symbolsSingular := []string{"hour ", "minute ", "second ", "ms "}
-	// hour
-	hour := (int(d.Hours()))
-	if hour > 0 {
-		times[0] = int64(hour)
-	}
-
-	// minute
-	minute := int(d.Minutes()) - hour*60
-	if minute > 0 {
-		times[1] = int64(minute)
-	}
-
-	// second
-	second := int(d.Seconds()) - hour*60*60 - minute*60
-	if second > 0 {
-		times[2] = int64(second)
-	}
-
-	// millisecond
-	millisecond := (d.Milliseconds() - int64(hour*60*60*1000+minute*60*1000+second*1000))
-	if millisecond > 0 {
-		times[3] = int64(millisecond)
-	}
-
-	for i := range 4 {
-		if times[i] > 0 {
-			res += strconv.FormatInt(times[i], 10) + " "
-			if times[i] == 1 {
-				res += symbolsSingular[i]
-			} else {
-				res += symbolsPlural[i]
-			}
-		}
-	}
-
-	return res
 }

@@ -1,85 +1,31 @@
-package main
+package csv2md
 
 import (
-	"encoding/csv"
 	"errors"
-	"flag"
 	"fmt"
 	"log/slog"
 	"strings"
-	"time"
 	"unicode/utf8"
-
-	"golang.design/x/clipboard"
 )
 
-const EXAMPLE_COMMAND = "./csv-to-md.exe -inputFile=input.csv -outputToWindow -align=0 -autoCopy"
+// Convert csv string into a markdown table
+func Convert(cfg Config) (string, error) {
 
-func main() {
-	startTime := time.Now()
-
-	csvString := ""
-	var err error = nil
-
-	cfg, cfgErr := parseConfig()
+	cfgErr := ValidateConfig(cfg)
 
 	if cfgErr != nil {
-		slog.Error(fmt.Sprintf("Configuration error: %s\n", cfgErr.Error()))
-		// user failed to run the program, let's run some help text
-		slog.Info(fmt.Sprintf("Example usage: %s", EXAMPLE_COMMAND))
-		flag.PrintDefaults()
-		return
+		slog.Error(fmt.Sprintf("Configuration error: %s\n", cfgErr))
 	}
-
 	if cfg.VerboseLogging {
 		slog.SetLogLoggerLevel(slog.LevelDebug)
 	}
 
-	csvString, err = getCSVStringFromSource(cfg)
+	csvString, readErr := getCSVStringFromSource(cfg)
 
-	if err != nil {
-		slog.Error(fmt.Sprintf("An error occurred when fetching data: %s\n", err.Error()))
-		return
+	if readErr != nil {
+		slog.Error(fmt.Sprintf("Error when reading CSV: %s\n", readErr))
 	}
 
-	res, err := Convert(csvString, cfg)
-
-	if err != nil {
-		slog.Error(fmt.Sprintf("An error occurred 🙄: %s\n", err.Error()))
-		return
-	}
-
-	if cfg.OutputFilePath != "" {
-		err = writeMarkdownTableToFile(cfg.OutputFilePath, res)
-		if err != nil {
-			slog.Error(fmt.Sprintf("Failure when writing to output file: %s\n", err.Error()))
-		}
-	}
-
-	// auto-copy activated, copy the converted table to clipboard
-	// only warn if we failed to initiate clipboard module. Program should finish even if we had an error in this phase
-	if cfg.AutoCopy {
-		clipboardInitErr := clipboard.Init()
-		if clipboardInitErr != nil {
-			slog.Warn("Failed to initiate clipboard\n", "Initial error", clipboardInitErr)
-		}
-		clipboard.Write(clipboard.FmtText, []byte(res))
-		slog.Info("Copied to clipboard 📋\n")
-	}
-
-	// output to window set to true, dump the table out to console
-	if cfg.OutputToWindow {
-		slog.Info("Converted table:\n\n" + res + "\n\n")
-	}
-
-	slog.Info(fmt.Sprintf("Elapsed time: %s", durationToReadableString(time.Since(startTime))))
-
-	slog.Info("Press Enter to continue...\n")
-	fmt.Scanln()
-}
-
-// Convert csv string into a markdown table
-func Convert(csvString string, cfg Config) (string, error) {
 	if csvString == "" {
 		return "", errors.New("empty CSV input")
 	}
@@ -103,8 +49,10 @@ func Convert(csvString string, cfg Config) (string, error) {
 		convertedLine, err := constructDataLine(records[idx], colCount, cfg, maxLenOfCol, idx)
 
 		if err != nil {
-			return "", nil
+			return "", err
 		}
+
+		convertedLine = strings.TrimSpace(convertedLine)
 
 		// only attach a new line if it's not the last line in the table
 		if idx < len(records)-1 {
@@ -115,7 +63,7 @@ func Convert(csvString string, cfg Config) (string, error) {
 		result += convertedLine
 
 		if idx == 0 {
-			separatorLine := constructSeparatorLine(colCount, maxLenOfCol, cfg)
+			separatorLine := constructSeparatorLine(colCount, maxLenOfCol, cfg.Align)
 			result += separatorLine
 		}
 	}
@@ -123,6 +71,7 @@ func Convert(csvString string, cfg Config) (string, error) {
 	return result, nil
 }
 
+// Construct data line
 func constructDataLine(colVals []string, colCount int, cfg Config, maxLenOfCol []int, currRowIdx int) (string, error) {
 	// fill empty column values with empty strings
 	for range colCount - len(colVals) {
@@ -159,7 +108,7 @@ func constructDataLine(colVals []string, colCount int, cfg Config, maxLenOfCol [
 }
 
 // Construct a separator line between the header line and data lines
-func constructSeparatorLine(colsCount int, maxLens []int, cfg Config) string {
+func constructSeparatorLine(colsCount int, maxLens []int, align Align) string {
 	separatorLine := "| "
 	for i := range colsCount {
 		dashes := ""
@@ -167,7 +116,7 @@ func constructSeparatorLine(colsCount int, maxLens []int, cfg Config) string {
 		for range maxLens[i] {
 			dashes += "-"
 		}
-		switch cfg.Align {
+		switch align {
 		case Left:
 			// replace the first dash with a colon. This makes the rendered table align text on the left hand side
 			dashes = strings.Replace(dashes, "-", ":", 1)
@@ -188,7 +137,11 @@ func constructSeparatorLine(colsCount int, maxLens []int, cfg Config) string {
 		}
 		separatorLine += dashes + " | "
 	}
+
+	// trim any potential leading/following whitespaces and add new line character
+	separatorLine = strings.TrimSpace(separatorLine)
 	separatorLine += "\n"
+
 	return separatorLine
 }
 
@@ -204,15 +157,4 @@ func getMaxColumnLengths(lines [][]string) []int {
 	}
 
 	return maxLens
-}
-
-func createCSVReader(cfg Config, csvString string) *csv.Reader {
-	r := csv.NewReader(strings.NewReader(csvString))
-	if cfg.Delimiter != 0 {
-		r.Comma = cfg.Delimiter
-	}
-
-	r.LazyQuotes = true
-
-	return r
 }

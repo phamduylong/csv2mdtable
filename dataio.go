@@ -1,6 +1,7 @@
-package main
+package csv2md
 
 import (
+	"encoding/csv"
 	"errors"
 	"fmt"
 	"io"
@@ -8,7 +9,20 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 )
+
+func createCSVReader(cfg Config, csvString string) *csv.Reader {
+	r := csv.NewReader(strings.NewReader(csvString))
+
+	if cfg.Delimiter != 0 {
+		r.Comma = cfg.Delimiter
+	}
+
+	r.LazyQuotes = true
+
+	return r
+}
 
 // Get CSV String from the source specified in the config object
 func getCSVStringFromSource(cfg Config) (csvString string, err error) {
@@ -101,21 +115,4 @@ func getCSVStringFromFile(cfg Config) (csvString string, err error) {
 	}
 
 	return string(fileContent[:]), nil
-}
-
-// Write csv data to the file path specified in the config object
-func writeMarkdownTableToFile(path string, csvString string) (err error) {
-	file, err := os.Create(path)
-	if err != nil {
-		return err
-	}
-
-	defer file.Close()
-	_, err = file.WriteString(csvString)
-
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
