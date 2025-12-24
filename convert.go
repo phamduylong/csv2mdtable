@@ -1,0 +1,160 @@
+package csv2md
+
+import (
+	"errors"
+	"fmt"
+	"log/slog"
+	"strings"
+	"unicode/utf8"
+)
+
+// Convert csv string into a markdown table
+func Convert(cfg Config) (string, error) {
+
+	cfgErr := ValidateConfig(cfg)
+
+	if cfgErr != nil {
+		slog.Error(fmt.Sprintf("Configuration error: %s\n", cfgErr))
+	}
+	if cfg.VerboseLogging {
+		slog.SetLogLoggerLevel(slog.LevelDebug)
+	}
+
+	csvString, readErr := getCSVStringFromSource(cfg)
+
+	if readErr != nil {
+		slog.Error(fmt.Sprintf("Error when reading CSV: %s\n", readErr))
+	}
+
+	if csvString == "" {
+		return "", errors.New("empty CSV input")
+	}
+
+	csvReader := createCSVReader(cfg, csvString)
+
+	records, err := csvReader.ReadAll()
+
+	if err != nil {
+		slog.Error(fmt.Sprintf("Failed to parse CSV. Error: %s", err))
+	}
+
+	colCount := csvReader.FieldsPerRecord
+	result := ""
+
+	// max length of each column so we can beautify the table
+	maxLenOfCol := getMaxColumnLengths(records)
+
+	// constructing each data line
+	for idx := range len(records) {
+		convertedLine, err := constructDataLine(records[idx], colCount, cfg, maxLenOfCol, idx)
+
+		if err != nil {
+			return "", err
+		}
+
+		convertedLine = strings.TrimSpace(convertedLine)
+
+		// only attach a new line if it's not the last line in the table
+		if idx < len(records)-1 {
+			convertedLine += "\n"
+		}
+
+		// append to result string
+		result += convertedLine
+
+		if idx == 0 {
+			separatorLine := constructSeparatorLine(colCount, maxLenOfCol, cfg.Align)
+			result += separatorLine
+		}
+	}
+
+	return result, nil
+}
+
+// Construct data line
+func constructDataLine(colVals []string, colCount int, cfg Config, maxLenOfCol []int, currRowIdx int) (string, error) {
+	// fill empty column values with empty strings
+	for range colCount - len(colVals) {
+		colVals = append(colVals, "")
+	}
+
+	convertedLine := ""
+
+	for i := range colCount {
+		paddedString := ""
+		var err error = nil
+
+		// this is basically visual feedback for users, doesn't affect how the table is rendered.
+		switch cfg.Align {
+		case Left:
+			paddedString, err = padEnd(colVals[i], maxLenOfCol[i], ' ')
+		case Right:
+			paddedString, err = padStart(colVals[i], maxLenOfCol[i], ' ')
+		case Center:
+			paddedString, err = padCenter(colVals[i], maxLenOfCol[i], ' ')
+		}
+
+		if err != nil {
+			return "", errors.New("something happened when padding value " + colVals[i] + " row: " + fmt.Sprint(currRowIdx) +
+				" col: " + fmt.Sprint(i) + ". Error message: " + err.Error())
+		}
+		convertedLine += "| " + paddedString + " "
+	}
+
+	// add final column closer and new line
+	convertedLine += "|"
+
+	return convertedLine, nil
+}
+
+// Construct a separator line between the header line and data lines
+func constructSeparatorLine(colsCount int, maxLens []int, align Align) string {
+	separatorLine := "| "
+	for i := range colsCount {
+		dashes := ""
+		// loop through max length of each column and add dashes
+		for range maxLens[i] {
+			dashes += "-"
+		}
+		switch align {
+		case Left:
+			// replace the first dash with a colon. This makes the rendered table align text on the left hand side
+			dashes = strings.Replace(dashes, "-", ":", 1)
+		case Right:
+			// replace the last dash with a colon. This makes the rendered table align text on the right hand side
+			i := strings.LastIndex(dashes, "-")
+			excludingLast := dashes[:i] + strings.Replace(dashes[i:], "-", "", 1)
+			dashes = excludingLast + ":"
+		case Center:
+			// replace the first and last dashes with colons
+			// first
+			dashes = strings.Replace(dashes, "-", ":", 1)
+
+			// last
+			i := strings.LastIndex(dashes, "-")
+			excludingLast := dashes[:i] + strings.Replace(dashes[i:], "-", "", 1)
+			dashes = excludingLast + ":"
+		}
+		separatorLine += dashes + " | "
+	}
+
+	// trim any potential leading/following whitespaces and add new line character
+	separatorLine = strings.TrimSpace(separatorLine)
+	separatorLine += "\n"
+
+	return separatorLine
+}
+
+// Get max length of each columns
+func getMaxColumnLengths(lines [][]string) []int {
+	maxLens := make([]int, len(lines[0]))
+	for _, fields := range lines {
+		for fieldIdx, fieldVal := range fields {
+			if utf8.RuneCountInString(fieldVal) > maxLens[fieldIdx] {
+				maxLens[fieldIdx] = utf8.RuneCountInString(fieldVal)
+			}
+		}
+	}
+
+	return maxLens
+}
