@@ -8,7 +8,7 @@ import (
 	"unicode/utf8"
 )
 
-// Convert csv string into a markdown table
+// Convert CSV string into a markdown table. Returns the string representation of the markdown table if converted successfully and an error if failed.
 func Convert(cfg Config) (string, error) {
 
 	cfgErr := ValidateConfig(cfg)

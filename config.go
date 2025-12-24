@@ -21,6 +21,7 @@ type Config struct {
 	Delimiter      rune
 }
 
+// Validate the Config object passed as parameter. An error will be returned in case the configuration was invalid.
 func ValidateConfig(cfg Config) error {
 	if cfg.VerboseLogging {
 		slog.SetLogLoggerLevel(slog.LevelDebug)
@@ -41,6 +42,6 @@ func ValidateConfig(cfg Config) error {
 	if cfg.VerboseLogging {
 		slog.Debug("Config is valid ✅")
 	}
-	
+
 	return nil
 }
