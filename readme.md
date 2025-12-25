@@ -1,12 +1,10 @@
-# CSV To Markdown Table Converter
+# CSV To Markdown Table Converter [![Go Reference](https://pkg.go.dev/badge/github.com/phamduylong/csv-to-md.svg)](https://pkg.go.dev/github.com/phamduylong/csv-to-md)
 
-This is a utility tool used to convert [Comma-separated values (CSV)](https://en.wikipedia.org/wiki/Comma-separated_values) files to a [Markdown table](https://www.markdownguide.org/extended-syntax/#tables).
-
-Test it out in the [Go playground](https://go.dev/play/p/p42h8-jG5dQ).
+This is a utility tool used to convert [Comma-separated values (CSV)](https://en.wikipedia.org/wiki/Comma-separated_values) files to a [Markdown table](https://www.markdownguide.org/extended-syntax/#tables). You can test it out in the [Go playground](https://go.dev/play/p/p42h8-jG5dQ).
 
 ## Table Of Contents
 
-- [CSV To Markdown Table Converter](#csv-to-markdown-table-converter)
+- [CSV To Markdown Table Converter ](#csv-to-markdown-table-converter-)
   - [Table Of Contents](#table-of-contents)
   - [Usage](#usage)
   - [Configuration Options](#configuration-options)
@@ -22,12 +20,12 @@ package main
 import (
   "fmt"
 
-  csv2md "github.com/phamduylong/csv-to-md"
+  csv2mdtable "github.com/phamduylong/csv-to-md"
 )
 
 func main() {
-  var cfg csv2md.Config
-  cfg.Align = csv2md.Left
+  var cfg csv2mdtable.Config
+  cfg.Align = csv2mdtable.Left
   cfg.VerboseLogging = true
   
   csv := `Index,Customer Id,First Name,Last Name,Company,City,Country,Phone
@@ -37,7 +35,7 @@ func main() {
 4,5Cef8BFA16c5e3c,Linda,Olsen,"Dominguez, Mcmillan and Donovan",Bensonview,Dominican Republic,001-808-617-6467x12895
 5,053d585Ab6b3159,Joanna,Bender,"Martin, Lang and Andrade",West Priscilla,Slovakia (Slovak Republic),001-234-203-0635x76146`
 
-  res, convertErr := csv2md.Convert(csv, cfg)
+  res, convertErr := csv2mdtable.Convert(csv, cfg)
 
   if convertErr != nil {
     fmt.Println(convertErr)
