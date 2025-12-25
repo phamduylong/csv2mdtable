@@ -9,7 +9,11 @@ import (
 )
 
 // Convert CSV string into a markdown table. Returns the string representation of the markdown table if converted successfully and an error if failed.
-func Convert(cfg Config) (string, error) {
+func Convert(csv string, cfg Config) (string, error) {
+
+	if csv == "" {
+		return "", fmt.Errorf("csv string is empty")
+	}
 
 	cfgErr := ValidateConfig(cfg)
 
@@ -21,17 +25,7 @@ func Convert(cfg Config) (string, error) {
 		slog.SetLogLoggerLevel(slog.LevelDebug)
 	}
 
-	csvString, readErr := getCSVStringFromSource(cfg)
-
-	if readErr != nil {
-		return "", fmt.Errorf("Error when reading CSV: %s\n", readErr)
-	}
-
-	if csvString == "" {
-		return "", errors.New("empty CSV input")
-	}
-
-	csvReader := createCSVReader(cfg, csvString)
+	csvReader := createCSVReader(cfg, csv)
 
 	records, err := csvReader.ReadAll()
 
@@ -47,7 +41,7 @@ func Convert(cfg Config) (string, error) {
 
 	// constructing each data line
 	for idx := range len(records) {
-		convertedLine, err := constructDataLine(records[idx], colCount, cfg, maxLenOfCol, idx)
+		convertedLine, err := constructDataLine(records[idx], cfg, maxLenOfCol, idx)
 
 		if err != nil {
 			return "", err
@@ -63,6 +57,7 @@ func Convert(cfg Config) (string, error) {
 		// append to result string
 		result += convertedLine
 
+		// after first line, we shall get a separator line
 		if idx == 0 {
 			separatorLine := constructSeparatorLine(colCount, maxLenOfCol, cfg.Align)
 			result += separatorLine
@@ -73,15 +68,11 @@ func Convert(cfg Config) (string, error) {
 }
 
 // Construct data line
-func constructDataLine(colVals []string, colCount int, cfg Config, maxLenOfCol []int, currRowIdx int) (string, error) {
-	// fill empty column values with empty strings
-	for range colCount - len(colVals) {
-		colVals = append(colVals, "")
-	}
+func constructDataLine(colVals []string, cfg Config, maxLenOfCol []int, currRowIdx int) (string, error) {
 
 	convertedLine := ""
 
-	for i := range colCount {
+	for i := range len(colVals) {
 		paddedString := ""
 		var err error = nil
 
