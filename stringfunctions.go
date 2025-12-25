@@ -1,4 +1,4 @@
-package csv2md
+package csv2mdtable
 
 import (
 	"errors"
