@@ -4,7 +4,7 @@ This is a utility tool used to convert [Comma-separated values (CSV)](https://en
 
 ## Table Of Contents
 
-- [CSV To Markdown Table Converter ](#csv-to-markdown-table-converter-)
+- [CSV To Markdown Table Converter](#csv-to-markdown-table-converter-)
   - [Table Of Contents](#table-of-contents)
   - [Usage](#usage)
   - [Configuration Options](#configuration-options)
@@ -70,6 +70,8 @@ The program offers a range of different configuration options to customize the t
 | Option                           | Type            | What does it do? |
 |----------------------------------|-----------------|------------------|
 | Align                            | Align           | Align the text on the rendered table. Visual feedback on the markdown syntax is also provided. |
+| Caption                          | string          | Set a caption for the table (will be rendered as an HTML comment above the table). |
+| Compact                          | bool            | Set whether the Markdown table be converted to compact syntax. |
 | CSVReaderConfig                  | CSVReaderConfig | Config options to be passed into CSV reader object. See [type Reader in the encoding/csv module](https://pkg.go.dev/encoding/csv#Reader). |
 | CSVReaderConfig.Comma            | Rune            | Set the delimiter of the CSV reader. |
 | CSVReaderConfig.Comment          | Rune            | Set the comment character for the CSV reader. |
