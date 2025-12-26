@@ -205,6 +205,76 @@ func TestWithTrimLeadingWhiteSpace(t *testing.T) {
 	assert.Equal(t, expected, res, STRINGS_SHOULD_BE_THE_SAME)
 }
 
+func TestWithCaption(t *testing.T) {
+	cfg := createGenericConfig()
+	cfg.Caption = "Table 2: Customers who are United fans"
+	expected := `<!-- Table 2: Customers who are United fans -->
+| First name | Last name |        Email         |    Phone     |
+| :--------: | :-------: | :------------------: | :----------: |
+|    Jane    |   Smith   | jane.smith@email.com | 555-555-1212 |
+|    John    |    Doe    |  john.doe@email.com  | 555-555-3434 |
+|   Alice    |  Wonder   | alice@wonderland.com | 555-555-5656 |`
+
+	res, err := Convert(csvString, cfg)
+
+	assert.Nil(t, err, "Convert with caption setting should not return an error")
+
+	assert.Equal(t, expected, res, STRINGS_SHOULD_BE_THE_SAME)
+}
+
+func TestCompactConvertGeneric(t * testing.T) {
+	cfg := createGenericConfig()
+	cfg.Compact = true
+
+	expected := `|First name|Last name|Email|Phone|
+|:-:|:-:|:-:|:-:|
+|Jane|Smith|jane.smith@email.com|555-555-1212|
+|John|Doe|john.doe@email.com|555-555-3434|
+|Alice|Wonder|alice@wonderland.com|555-555-5656|`
+
+	res, err := Convert(csvString, cfg)
+
+	assert.Nil(t, err, "Convert compact should not return a non-nil error")
+
+	assert.Equal(t, expected, res, STRINGS_SHOULD_BE_THE_SAME)
+}
+
+func TestCompactConvertGenericLeftAlign(t * testing.T) {
+	cfg := createGenericConfig()
+	cfg.Compact = true
+	cfg.Align = Left
+
+	expected := `|First name|Last name|Email|Phone|
+|:-|:-|:-|:-|
+|Jane|Smith|jane.smith@email.com|555-555-1212|
+|John|Doe|john.doe@email.com|555-555-3434|
+|Alice|Wonder|alice@wonderland.com|555-555-5656|`
+
+	res, err := Convert(csvString, cfg)
+
+	assert.Nil(t, err, "Convert compact left align should not return a non-nil error")
+
+	assert.Equal(t, expected, res, STRINGS_SHOULD_BE_THE_SAME)
+}
+
+func TestCompactConvertGenericRightAlign(t * testing.T) {
+	cfg := createGenericConfig()
+	cfg.Compact = true
+	cfg.Align = Right
+
+	expected := `|First name|Last name|Email|Phone|
+|-:|-:|-:|-:|
+|Jane|Smith|jane.smith@email.com|555-555-1212|
+|John|Doe|john.doe@email.com|555-555-3434|
+|Alice|Wonder|alice@wonderland.com|555-555-5656|`
+
+	res, err := Convert(csvString, cfg)
+
+	assert.Nil(t, err, "Convert compact right align should not return a non-nil error")
+
+	assert.Equal(t, expected, res, STRINGS_SHOULD_BE_THE_SAME)
+}
+
 func createGenericConfig() Config {
 	var cfg Config
 	return cfg
