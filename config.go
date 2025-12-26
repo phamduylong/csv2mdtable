@@ -17,6 +17,12 @@ type Config struct {
 	// Align the rendered content for the Markdown table. 0 = Center, 1 = Left, 2 = Right
 	Align Align
 
+	// Caption of the table (as an HTML comment)
+	Caption string
+
+	// Should the markdown table be the compact version
+	Compact bool
+
 	// Reader configuration to be used for Reader type.
 	// See also https://pkg.go.dev/encoding/csv#Reader
 	CSVReaderConfig CSVReaderConfig
