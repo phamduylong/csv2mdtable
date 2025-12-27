@@ -25,6 +25,9 @@ func Convert(csv string, cfg Config) (string, error) {
 		slog.SetLogLoggerLevel(slog.LevelDebug)
 	}
 
+	// escape pipe characters 
+	csv = strings.ReplaceAll(csv, "|", `\|`)
+
 	csvReader := createCSVReader(cfg, csv)
 
 	records, err := csvReader.ReadAll()
@@ -96,7 +99,6 @@ func constructBeautifulDataLine(colVals []string, align Align, maxLenOfCol []int
 		case Center:
 			paddedString, err = padCenter(colVals[i], maxLenOfCol[i], ' ')
 		}
-		
 
 		if err != nil {
 			return "", errors.New("something happened when padding value " + colVals[i] + " row: " + fmt.Sprint(currRowIdx) +
@@ -104,9 +106,9 @@ func constructBeautifulDataLine(colVals []string, align Align, maxLenOfCol []int
 		}
 
 		convertedLine += paddedString + " | "
-		
+
 	}
-	
+
 	convertedLine += "\n"
 
 	return convertedLine, nil
