@@ -79,6 +79,7 @@ The program offers a range of different configuration options to customize the t
 | CSVReaderConfig.LazyQuotes       | bool            | Set whether lazy quotes are allowed. If lazy quotes are allowed, a quote may appear in an unquoted field and a non-doubled quote may appear in a quoted field. |
 | CSVReaderConfig.TrimLeadingSpace | bool            | Set whether leading space before the fields' values should be ignored. |
 | CSVReaderConfig.ReuseRecord      | bool            | Set whether calls to Read may return a slice sharing the backing array of the previous call's returned slice for performance. By default, each call to Read returns newly allocated memory owned by the caller. |
+| ExcludedColumns                  | []string        | Set the list of columns that should be ignored when constructing the table. |
 | VerboseLogging                   | bool            | Log detailed diagnostic messages when running the program. |
 
 ## Performance
