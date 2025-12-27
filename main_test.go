@@ -299,6 +299,52 @@ func TestEscapePipeCharacter(t *testing.T) {
 	assert.Equal(t, expected, res, STRINGS_SHOULD_BE_THE_SAME)
 }
 
+func TestConvertExcludeColumns(t *testing.T) {
+	cfg := createGenericConfig()
+	cfg.ExcludedColumns = []string{"Email", "First name", "Phone"}
+
+	expected := `| Last name |
+| :-------: |
+|   Smith   |
+|    Doe    |
+|  Wonder   |`
+
+	res, err := Convert(csvString, cfg)
+
+	assert.Nil(t, err, "Convert with excluded columns should not return a non-nil error")
+
+	assert.Equal(t, expected, res, STRINGS_SHOULD_BE_THE_SAME)
+}
+
+
+func TestConvertExcludeAllColumns(t *testing.T) {
+	cfg := createGenericConfig()
+	cfg.ExcludedColumns = []string{"Email", "Last name", "First name", "Phone"}
+
+	res, err := Convert(csvString, cfg)
+
+	assert.Nil(t, err, "Convert with all excluded columns should not return a non-nil error")
+
+	assert.Empty(t, res, "String should be empty")
+}
+
+func TestConvertExcludeNoColumn(t *testing.T) {
+	cfg := createGenericConfig()
+	cfg.ExcludedColumns = []string{}
+
+	expected := `| First name | Last name |        Email         |    Phone     |
+| :--------: | :-------: | :------------------: | :----------: |
+|    Jane    |   Smith   | jane.smith@email.com | 555-555-1212 |
+|    John    |    Doe    |  john.doe@email.com  | 555-555-3434 |
+|   Alice    |  Wonder   | alice@wonderland.com | 555-555-5656 |`
+
+	res, err := Convert(csvString, cfg)
+
+	assert.Nil(t, err, "Convert with empty list of excluded columns should not return a non-nil error")
+
+	assert.Equal(t, expected, res, STRINGS_SHOULD_BE_THE_SAME)
+}
+
 func createGenericConfig() Config {
 	var cfg Config
 	return cfg
