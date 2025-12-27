@@ -73,6 +73,12 @@ const csvStringWithWhiteSpaces = `First name,   Last name,  Email,Phone
 John,Doe,  john.doe@email.com,555-555-3434
 Alice,Wonder,    alice@wonderland.com,    555-555-5656`
 
+const csvStringWithPipeCharacters = `ID,Expression,Description
+1,A || B,Logical OR using pipe
+2,foo | bar | baz,Chained pipe values
+3,cmd1 | cmd2,Unix-style pipe between commands
+4,x | y == z,Comparison involving a pipe operator`
+
 func TestConvertGeneric(t *testing.T) {
 	cfg := createGenericConfig()
 
@@ -222,7 +228,7 @@ func TestWithCaption(t *testing.T) {
 	assert.Equal(t, expected, res, STRINGS_SHOULD_BE_THE_SAME)
 }
 
-func TestCompactConvertGeneric(t * testing.T) {
+func TestCompactConvertGeneric(t *testing.T) {
 	cfg := createGenericConfig()
 	cfg.Compact = true
 
@@ -239,7 +245,7 @@ func TestCompactConvertGeneric(t * testing.T) {
 	assert.Equal(t, expected, res, STRINGS_SHOULD_BE_THE_SAME)
 }
 
-func TestCompactConvertGenericLeftAlign(t * testing.T) {
+func TestCompactConvertGenericLeftAlign(t *testing.T) {
 	cfg := createGenericConfig()
 	cfg.Compact = true
 	cfg.Align = Left
@@ -257,7 +263,7 @@ func TestCompactConvertGenericLeftAlign(t * testing.T) {
 	assert.Equal(t, expected, res, STRINGS_SHOULD_BE_THE_SAME)
 }
 
-func TestCompactConvertGenericRightAlign(t * testing.T) {
+func TestCompactConvertGenericRightAlign(t *testing.T) {
 	cfg := createGenericConfig()
 	cfg.Compact = true
 	cfg.Align = Right
@@ -271,6 +277,24 @@ func TestCompactConvertGenericRightAlign(t * testing.T) {
 	res, err := Convert(csvString, cfg)
 
 	assert.Nil(t, err, "Convert compact right align should not return a non-nil error")
+
+	assert.Equal(t, expected, res, STRINGS_SHOULD_BE_THE_SAME)
+}
+
+func TestEscapePipeCharacter(t *testing.T) {
+	cfg := createGenericConfig()
+	cfg.Align = Left
+
+	expected := `| ID | Expression        | Description                          |
+| :- | :---------------- | :----------------------------------- |
+| 1  | A \|\| B          | Logical OR using pipe                |
+| 2  | foo \| bar \| baz | Chained pipe values                  |
+| 3  | cmd1 \| cmd2      | Unix-style pipe between commands     |
+| 4  | x \| y == z       | Comparison involving a pipe operator |`
+
+	res, err := Convert(csvStringWithPipeCharacters, cfg)
+
+	assert.Nil(t, err, "Convert with pipe characters should not return a non-nil error")
 
 	assert.Equal(t, expected, res, STRINGS_SHOULD_BE_THE_SAME)
 }
