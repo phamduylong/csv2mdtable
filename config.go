@@ -27,6 +27,9 @@ type Config struct {
 	// See also https://pkg.go.dev/encoding/csv#Reader
 	CSVReaderConfig CSVReaderConfig
 
+	// List of columns to be excluded from table construction
+	ExcludedColumns []string
+
 	// Log detailed diagnostic messages when running the program.
 	VerboseLogging bool
 }
