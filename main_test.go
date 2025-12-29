@@ -55,6 +55,11 @@ Jane,Smith,jane.smith@email.com,555-555-1212
 John,Doe,john.doe@email.com,555-555-3434
 Alice,Wonder,alice@wonderland.com,555-555-5656`
 
+const csvStringWithNarrowColumn = `#,first name,last name,email,gender
+1,Herman,Gribbin,hgribbin0@deliciousdays.com,Male
+2,Bing,Langthorne,blangthorne1@a8.net,Male
+3,Keith,Hansford,khansford2@reference.com,Male`
+
 const csvStringWithSemiColon = `First name;Last name;Email;Phone
 Jane;Smith;jane.smith@email.com;555-555-1212
 John;Doe;john.doe@email.com;555-555-3434
@@ -94,6 +99,57 @@ func TestConvertGeneric(t *testing.T) {
 
 	assert.Equal(t, expected, res, STRINGS_SHOULD_BE_THE_SAME)
 
+}
+
+func TestConvertWithNarrowColumnCenterAlign(t *testing.T) {
+	cfg := createGenericConfig()
+	cfg.Align = Center
+
+	expected := `|  #  | first name | last name  |            email            | gender |
+| :-: | :--------: | :--------: | :-------------------------: | :----: |
+|  1  |   Herman   |  Gribbin   | hgribbin0@deliciousdays.com |  Male  |
+|  2  |    Bing    | Langthorne |     blangthorne1@a8.net     |  Male  |
+|  3  |   Keith    |  Hansford  |  khansford2@reference.com   |  Male  |`
+
+	res, err := Convert(csvStringWithNarrowColumn, cfg)
+
+	assert.Nil(t, err, "Convert with narrow column align center should not return a non-nil error")
+
+	assert.Equal(t, expected, res, STRINGS_SHOULD_BE_THE_SAME)
+}
+
+func TestConvertWithNarrowColumnLeftAlign(t *testing.T) {
+	cfg := createGenericConfig()
+	cfg.Align = Left
+
+	expected := `| #  | first name | last name  | email                       | gender |
+| :- | :--------- | :--------- | :-------------------------- | :----- |
+| 1  | Herman     | Gribbin    | hgribbin0@deliciousdays.com | Male   |
+| 2  | Bing       | Langthorne | blangthorne1@a8.net         | Male   |
+| 3  | Keith      | Hansford   | khansford2@reference.com    | Male   |`
+
+	res, err := Convert(csvStringWithNarrowColumn, cfg)
+
+	assert.Nil(t, err, "Convert with narrow column align left should not return a non-nil error")
+
+	assert.Equal(t, expected, res, STRINGS_SHOULD_BE_THE_SAME)
+}
+
+func TestConvertWithNarrowColumnRightAlign(t *testing.T) {
+	cfg := createGenericConfig()
+	cfg.Align = Right
+
+	expected := `|  # | first name |  last name |                       email | gender |
+| -: | ---------: | ---------: | --------------------------: | -----: |
+|  1 |     Herman |    Gribbin | hgribbin0@deliciousdays.com |   Male |
+|  2 |       Bing | Langthorne |         blangthorne1@a8.net |   Male |
+|  3 |      Keith |   Hansford |    khansford2@reference.com |   Male |`
+
+	res, err := Convert(csvStringWithNarrowColumn, cfg)
+
+	assert.Nil(t, err, "Convert with narrow column align right should not return a non-nil error")
+
+	assert.Equal(t, expected, res, STRINGS_SHOULD_BE_THE_SAME)
 }
 
 func TestLeftAlign(t *testing.T) {
