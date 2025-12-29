@@ -52,7 +52,7 @@ func Convert(csv string, cfg Config) (string, error) {
 	}
 
 	// max length of each column so we can beautify the table
-	maxLenOfCol := getMaxColumnLengths(records)
+	maxLenOfCol := getMaxColumnLengths(records, cfg.Align)
 
 	// constructing each data line
 	for idx := range len(records) {
@@ -216,7 +216,7 @@ func constructCompactSeparatorLine(colCount int, align Align) string {
 }
 
 // Get max length of each columns
-func getMaxColumnLengths(lines [][]string) []int {
+func getMaxColumnLengths(lines [][]string, align Align) []int {
 	maxLens := make([]int, len(lines[0]))
 	for _, fields := range lines {
 		for fieldIdx, fieldVal := range fields {
@@ -226,9 +226,19 @@ func getMaxColumnLengths(lines [][]string) []int {
 		}
 	}
 
+	for idx, colLen := range maxLens {
+		if colLen <= 2 && align == Center {
+			// if align is center, we need at least 3 spaces (:-:)
+			maxLens[idx] = 3
+		} else if colLen < 2 && align != Center {
+			maxLens[idx] = 2
+		}
+	}
+
 	return maxLens
 }
 
+// Get the indices of columns that are excluded in config
 func getIndicesOfExcludedColumns(excludedColumns []string, headerLine []string) []int {
 	var excludedColumnsIndices []int
 	if len(excludedColumns) > 0 {
