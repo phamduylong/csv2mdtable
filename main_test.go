@@ -355,7 +355,7 @@ func TestEscapePipeCharacter(t *testing.T) {
 	assert.Equal(t, expected, res, STRINGS_SHOULD_BE_THE_SAME)
 }
 
-func TestConvertExcludeColumns(t *testing.T) {
+func TestConvertExcludeAllColumnsButOne(t *testing.T) {
 	cfg := createGenericConfig()
 	cfg.ExcludedColumns = []string{"Email", "First name", "Phone"}
 
@@ -364,6 +364,23 @@ func TestConvertExcludeColumns(t *testing.T) {
 |   Smith   |
 |    Doe    |
 |  Wonder   |`
+
+	res, err := Convert(csvString, cfg)
+
+	assert.Nil(t, err, "Convert while excluded all columns but one should not return a non-nil error")
+
+	assert.Equal(t, expected, res, STRINGS_SHOULD_BE_THE_SAME)
+}
+
+func TestConvertExcludeSomeColumns(t *testing.T) {
+	cfg := createGenericConfig()
+	cfg.ExcludedColumns = []string{"Email", "First name"}
+
+	expected := `| Last name |    Phone     |
+| :-------: | :----------: |
+|   Smith   | 555-555-1212 |
+|    Doe    | 555-555-3434 |
+|  Wonder   | 555-555-5656 |`
 
 	res, err := Convert(csvString, cfg)
 
