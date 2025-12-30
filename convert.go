@@ -37,11 +37,16 @@ func Convert(csv string, cfg Config) (string, error) {
 		return "", fmt.Errorf("Failed to parse CSV. Error: %s", readErr)
 	}
 
-	excludedColumnsIndices := getIndicesOfExcludedColumns(cfg.ExcludedColumns, records[0])
+	cfg.excludedColumnsIndices = getIndicesOfExcludedColumns(cfg.ExcludedColumns, records[0])
 
-	if len(excludedColumnsIndices) > 0 && len(excludedColumnsIndices) == len(records) {
+	if len(cfg.excludedColumnsIndices) > 0 && len(cfg.excludedColumnsIndices) == len(records[0]) {
 		slog.Warn("All columns were excluded from conversion. Returning an empty string")
 		return "", nil
+	}
+
+	// get the new order of columns after sorted, compared to the original order of them.
+	if cfg.SortColumns != None {
+		cfg.columnsIndicesAfterSorting = getIndicesAfterSorting(cfg.SortColumns, records[0])
 	}
 
 	colCount := csvReader.FieldsPerRecord
@@ -56,7 +61,7 @@ func Convert(csv string, cfg Config) (string, error) {
 
 	// constructing each data line
 	for idx := range len(records) {
-		convertedLine, err := constructDataLine(records[idx], cfg, excludedColumnsIndices, maxLenOfCol, idx)
+		convertedLine, err := constructDataLine(records[idx], cfg, maxLenOfCol, idx)
 
 		if err != nil {
 			return "", err
@@ -74,7 +79,7 @@ func Convert(csv string, cfg Config) (string, error) {
 
 		// after first line, we shall get a separator line
 		if idx == 0 {
-			separatorLine := constructSeparatorLine(colCount, excludedColumnsIndices, maxLenOfCol, cfg)
+			separatorLine := constructSeparatorLine(colCount, maxLenOfCol, cfg)
 			result += separatorLine
 		}
 	}
@@ -83,11 +88,11 @@ func Convert(csv string, cfg Config) (string, error) {
 }
 
 // Construct data line
-func constructDataLine(colVals []string, cfg Config, excludedColumnsIndices []int, maxLenOfCol []int, currRowIdx int) (string, error) {
+func constructDataLine(colVals []string, cfg Config, maxLenOfCol []int, currRowIdx int) (string, error) {
 	if cfg.Compact {
-		return constructCompactDataLine(colVals, excludedColumnsIndices)
+		return constructCompactDataLine(colVals, cfg.excludedColumnsIndices)
 	} else {
-		return constructBeautifulDataLine(colVals, cfg.Align, excludedColumnsIndices, maxLenOfCol, currRowIdx)
+		return constructBeautifulDataLine(colVals, cfg.Align, cfg.excludedColumnsIndices, maxLenOfCol, currRowIdx)
 	}
 }
 
@@ -142,12 +147,12 @@ func constructCompactDataLine(colVals []string, excludedColumnsIndices []int) (s
 }
 
 // Construct a separator line between the header line and data lines
-func constructSeparatorLine(colsCount int, excludedColumnsIndices []int, maxLens []int, cfg Config) string {
+func constructSeparatorLine(colsCount int, maxLens []int, cfg Config) string {
 	if cfg.Compact {
 		// since we're in compact mode, all columns separator will look alike. We just care about the number of columns included
-		return constructCompactSeparatorLine(colsCount-len(excludedColumnsIndices), cfg.Align)
+		return constructCompactSeparatorLine(colsCount-len(cfg.excludedColumnsIndices), cfg.Align)
 	} else {
-		return constructBeautifulSeparatorLine(colsCount, excludedColumnsIndices, maxLens, cfg.Align)
+		return constructBeautifulSeparatorLine(colsCount, cfg.excludedColumnsIndices, maxLens, cfg.Align)
 	}
 }
 
@@ -250,4 +255,28 @@ func getIndicesOfExcludedColumns(excludedColumns []string, headerLine []string) 
 		}
 	}
 	return excludedColumnsIndices
+}
+
+// Get the indices of columns after sorted
+func getIndicesAfterSorting(sortType ColumnSortOption, headerLine []string) []int {
+	sortedColumns := make([]string, len(headerLine))
+	copy(sortedColumns, headerLine)
+	var columnsIndicesAfterSorting []int
+
+	switch sortType {
+	case Ascending:
+		slices.SortFunc(sortedColumns, func(a, b string) int {
+			return strings.Compare(strings.ToLower(a), strings.ToLower(b))
+		})
+	case Descending:
+		slices.SortFunc(sortedColumns, func(a, b string) int {
+			return strings.Compare(strings.ToLower(b), strings.ToLower(a))
+		})
+	}
+
+	for i := range sortedColumns {
+		columnsIndicesAfterSorting = append(columnsIndicesAfterSorting, slices.Index(headerLine, sortedColumns[i]))
+	}
+
+	return columnsIndicesAfterSorting
 }
