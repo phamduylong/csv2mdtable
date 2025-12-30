@@ -13,6 +13,14 @@ const (
 	Right  Align = 2
 )
 
+type ColumnSortOption int
+
+const (
+	None       ColumnSortOption = 0
+	Ascending  ColumnSortOption = 1
+	Descending ColumnSortOption = 2
+)
+
 type Config struct {
 	// Align the rendered content for the Markdown table. 0 = Center, 1 = Left, 2 = Right
 	Align Align
@@ -29,6 +37,15 @@ type Config struct {
 
 	// List of columns to be excluded from table construction
 	ExcludedColumns []string
+
+	// Indices of excluded columns (internal)
+	excludedColumnsIndices []int
+
+	// Indices of original columns in sorted list (internal)
+	columnsIndicesAfterSorting []int
+
+	// Should the columns be sorted and how?
+	SortColumns ColumnSortOption
 
 	// Log detailed diagnostic messages when running the program.
 	VerboseLogging bool
