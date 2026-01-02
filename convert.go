@@ -44,10 +44,7 @@ func Convert(csv string, cfg Config) (string, error) {
 		return "", nil
 	}
 
-	// get the new order of columns after sorted, compared to the original order of them.
-	if cfg.SortColumns != None {
-		cfg.columnsIndicesAfterSorting = getIndicesAfterSorting(cfg.SortColumns, records[0])
-	}
+	cfg = populateColumnIndices(cfg, records[0])
 
 	colCount := csvReader.FieldsPerRecord
 	result := ""
@@ -99,19 +96,9 @@ func constructDataLine(colVals []string, cfg Config, maxLenOfCol []int, currRowI
 // Construct a well-formatted data line
 func constructBeautifulDataLine(colVals []string, cfg Config, maxLenOfCol []int, currRowIdx int) (string, error) {
 
-	colsCount := len(colVals)
-	indicesToIterate := make([]int, colsCount)
-	if cfg.SortColumns == None {
-		for i := range colsCount {
-			indicesToIterate[i] = i
-		}
-	} else {
-		copy(indicesToIterate, cfg.columnsIndicesAfterSorting)
-	}
-
 	convertedLine := "| "
 
-	for _, i := range indicesToIterate {
+	for _, i := range cfg.orderedColumnsIndices {
 		// If current column is excluded, ignore it
 		if slices.Contains(cfg.excludedColumnsIndices, i) {
 			continue
@@ -142,18 +129,10 @@ func constructBeautifulDataLine(colVals []string, cfg Config, maxLenOfCol []int,
 
 // Construct a compact data line
 func constructCompactDataLine(colVals []string, cfg Config) (string, error) {
-	colsCount := len(colVals)
-	indicesToIterate := make([]int, colsCount)
-	if cfg.SortColumns == None {
-		for i := range colsCount {
-			indicesToIterate[i] = i
-		}
-	} else {
-		copy(indicesToIterate, cfg.columnsIndicesAfterSorting)
-	}
+
 	convertedLine := "|"
 
-	for _, i := range indicesToIterate {
+	for _, i := range cfg.orderedColumnsIndices {
 		// If current column is excluded, ignore it
 		if slices.Contains(cfg.excludedColumnsIndices, i) {
 			continue
@@ -170,24 +149,16 @@ func constructSeparatorLine(colsCount int, maxLenOfCol []int, cfg Config) string
 		// since we're in compact mode, all columns separator will look alike. We just care about the number of columns included
 		return constructCompactSeparatorLine(colsCount-len(cfg.excludedColumnsIndices), cfg.Align)
 	} else {
-		return constructBeautifulSeparatorLine(colsCount, cfg, maxLenOfCol)
+		return constructBeautifulSeparatorLine(cfg, maxLenOfCol)
 	}
 }
 
 // Construct a well-formatted separator line
-func constructBeautifulSeparatorLine(colsCount int, cfg Config, maxLenOfCol []int) string {
-	indicesToIterate := make([]int, colsCount)
-	if cfg.SortColumns == None {
-		for i := range colsCount {
-			indicesToIterate[i] = i
-		}
-	} else {
-		copy(indicesToIterate, cfg.columnsIndicesAfterSorting)
-	}
+func constructBeautifulSeparatorLine(cfg Config, maxLenOfCol []int) string {
 
 	separatorLine := "| "
 
-	for _, i := range indicesToIterate {
+	for _, i := range cfg.orderedColumnsIndices {
 		// If current column is excluded, ignore it
 		if slices.Contains(cfg.excludedColumnsIndices, i) {
 			continue
@@ -283,28 +254,4 @@ func getIndicesOfExcludedColumns(excludedColumns []string, headerLine []string) 
 		}
 	}
 	return excludedColumnsIndices
-}
-
-// Get the indices of columns after sorted
-func getIndicesAfterSorting(sortType ColumnSortOption, headerLine []string) []int {
-	sortedColumns := make([]string, len(headerLine))
-	copy(sortedColumns, headerLine)
-	var columnsIndicesAfterSorting []int
-
-	switch sortType {
-	case Ascending:
-		slices.SortFunc(sortedColumns, func(a, b string) int {
-			return strings.Compare(strings.ToLower(a), strings.ToLower(b))
-		})
-	case Descending:
-		slices.SortFunc(sortedColumns, func(a, b string) int {
-			return strings.Compare(strings.ToLower(b), strings.ToLower(a))
-		})
-	}
-
-	for i := range sortedColumns {
-		columnsIndicesAfterSorting = append(columnsIndicesAfterSorting, slices.Index(headerLine, sortedColumns[i]))
-	}
-
-	return columnsIndicesAfterSorting
 }
