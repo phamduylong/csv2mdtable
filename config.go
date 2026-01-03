@@ -123,7 +123,7 @@ func ValidateConfig(cfg Config) error {
 	// function passed in but not sort type is not custom
 	if cfg.SortColumns != Custom && cfg.SortFunction != nil {
 		configMalformed = true
-		slog.Warn("Sort function only works when SortColumns is set to Custom. SortColumns received is " + SortColumnsToString(cfg.SortColumns) + ", ignoring SortFunc.")
+		slog.Warn("Sort function only works when SortColumns is set to Custom. SortColumns received is " + sortColumnsToString(cfg.SortColumns) + ", ignoring SortFunc.")
 	}
 
 	if cfg.VerboseLogging && !configMalformed {
@@ -133,7 +133,7 @@ func ValidateConfig(cfg Config) error {
 	return nil
 }
 
-func SortColumnsToString(val ColumnSortOption) string {
+func sortColumnsToString(val ColumnSortOption) string {
 	switch val {
 	case None:
 		return "None"
